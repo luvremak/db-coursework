@@ -52,7 +52,10 @@ class DataclassSerializer[Model, T_DTO: DTO](SerializerBase[Model, T_DTO]):
             raise TypeError(f"Argument 'model' must be a dataclass class. Got '{model}'.")
 
     def serialize(self, obj: Model) -> DTO:
-        return dataclasses.asdict(obj)
+        res = dataclasses.asdict(obj)
+        if res['id'] is None:
+            del res['id']
+        return res
 
     def deserialize(self, obj: DTO) -> Model:
         return self.model(**obj)

@@ -8,6 +8,7 @@ from app.core.models import Entity
 class Task(Entity):
     project_id: int
     name: str
+    code: str
     description: str
     deadline: datetime
     created_at: datetime

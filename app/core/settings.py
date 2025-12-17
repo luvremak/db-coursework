@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=f'{os.path.dirname(__file__)}/../../.env')
 
     DB_URI: str = "sqlite+aiosqlite:///./database.sqlite"
+    TG_BOT_TOKEN: str
 
 
 settings = Settings()  # noqa

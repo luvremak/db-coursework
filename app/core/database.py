@@ -5,4 +5,4 @@ from app.core.settings import settings
 
 metadata = MetaData()
 
-database = Database(settings.DB_URI, min_size=1, max_size=16)
+database = Database(settings.DB_URI)
