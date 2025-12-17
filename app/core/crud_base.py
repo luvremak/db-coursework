@@ -1,3 +1,4 @@
+import logging
 from copy import deepcopy
 from typing import ClassVar, Optional, Sequence
 
@@ -6,6 +7,8 @@ from sqlalchemy.dialects import postgresql
 
 from app.core.database import database
 from app.core.types import PageData, PaginationParameters
+
+logger = logging.getLogger(__name__)
 
 
 class CrudBase[ID, DTO]:
@@ -18,10 +21,10 @@ class CrudBase[ID, DTO]:
                 dialect=postgresql.dialect(),
                 compile_kwargs={"literal_binds": True},
             )
-            print(str(compiled))
+            logger.info(str(compiled))
         except Exception:
-            print(str(query))
-        print('-' * 50)
+            logger.info(str(query))
+        logger.info('-' * 50)
 
     async def get_by_id(self, id_: ID) -> Optional[DTO]:
         query = self.table.select().where(self.table.c.id == id_)
