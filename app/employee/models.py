@@ -9,6 +9,7 @@ class Employee(Entity):
     telegram_id: int
     company_id: int
     is_active: bool
+    is_admin: bool
     created_at: datetime
     salary_per_hour: float
     display_name: str
