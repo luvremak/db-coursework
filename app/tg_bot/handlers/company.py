@@ -1,9 +1,12 @@
+import csv
+import io
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, BufferedInputFile
 
 from app.company.services import company_service
+from app.time_tracking.services import time_tracking_entry_service
 from app.core.exceptions import ApplicationError
 from app.tg_bot.states.company import CompanyCreation
 from app.tg_bot.utils.callback_data import CompanyCallback
@@ -181,6 +184,87 @@ async def callback_back_to_list(callback: CallbackQuery):
     await callback.answer()
 
 
+async def callback_export_project_stats(callback: CallbackQuery, callback_data: CompanyCallback):
+    company_id = callback_data.company_id
+    user_tg_id = callback.from_user.id
+
+    try:
+        is_owner = await company_service.verify_user_is_owner(company_id, user_tg_id)
+        if not is_owner:
+            await callback.answer("Only company owner can export statistics", show_alert=True)
+            return
+
+        company = await company_service.get_company_details(company_id)
+        rows = await time_tracking_entry_service.get_project_stats_for_company(company_id)
+
+        if not rows:
+            await callback.answer("No time tracking data available for export", show_alert=True)
+            return
+
+        output = io.StringIO()
+        fieldnames = ["company_code", "project_code", "total_hours_spent", "total_money_spent"]
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+        csv_bytes = output.getvalue().encode('utf-8')
+        output.close()
+
+        filename = f"{company.code}_project_stats.csv"
+        document = BufferedInputFile(csv_bytes, filename=filename)
+
+        await callback.message.answer_document(
+            document=document,
+            caption=f"📊 Project statistics for {company.name}"
+        )
+        await callback.answer("CSV file generated successfully!")
+
+    except ApplicationError as e:
+        await handle_service_error(e, callback)
+
+
+async def callback_export_employee_stats(callback: CallbackQuery, callback_data: CompanyCallback):
+    company_id = callback_data.company_id
+    user_tg_id = callback.from_user.id
+
+    try:
+        is_owner = await company_service.verify_user_is_owner(company_id, user_tg_id)
+        if not is_owner:
+            await callback.answer("Only company owner can export statistics", show_alert=True)
+            return
+
+        company = await company_service.get_company_details(company_id)
+        rows = await time_tracking_entry_service.get_employee_stats_for_company(company_id)
+
+        if not rows:
+            await callback.answer("No time tracking data available for export", show_alert=True)
+            return
+
+        output = io.StringIO()
+        fieldnames = [
+            "company_code", "project_code", "task_code", "task_name",
+            "employee_display_name", "created_at", "duration_minutes", "salary"
+        ]
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+        csv_bytes = output.getvalue().encode('utf-8')
+        output.close()
+
+        filename = f"{company.code}_employee_stats.csv"
+        document = BufferedInputFile(csv_bytes, filename=filename)
+
+        await callback.message.answer_document(
+            document=document,
+            caption=f"📊 Employee statistics for {company.name}"
+        )
+        await callback.answer("CSV file generated successfully!")
+
+    except ApplicationError as e:
+        await handle_service_error(e, callback)
+
+
 def register_company_handlers(router: Router):
     router.message.register(cmd_new_company, Command("new_company"))
     router.message.register(cmd_my_companies, Command("my_companies"))
@@ -195,6 +279,14 @@ def register_company_handlers(router: Router):
     router.callback_query.register(
         callback_company_details,
         CompanyCallback.filter(F.action == "details")
+    )
+    router.callback_query.register(
+        callback_export_project_stats,
+        CompanyCallback.filter(F.action == "export_project_stats")
+    )
+    router.callback_query.register(
+        callback_export_employee_stats,
+        CompanyCallback.filter(F.action == "export_employee_stats")
     )
     router.callback_query.register(
         callback_company_delete,

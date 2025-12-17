@@ -1,4 +1,4 @@
-from sqlalchemy import and_, select, func
+from sqlalchemy import and_, select, func, join
 
 from app.core.crud_base import CrudBase
 from app.core.repo_base import RepoBase
@@ -22,6 +22,22 @@ class TimeTrackingEntryCrud(CrudBase[int, DTO]):
         result = await database.fetch_val(query)
         return result or 0
 
+    async def get_all_entries_for_company(self, company_id: int) -> list[DTO]:
+        from app.task.tables import task_table
+        from app.project.tables import project_table
+
+        query = (
+            select(self.table)
+            .select_from(
+                self.table
+                .join(task_table, self.table.c.task_id == task_table.c.id)
+                .join(project_table, task_table.c.project_id == project_table.c.id)
+            )
+            .where(project_table.c.company_id == company_id)
+            .order_by(self.table.c.created_at.desc())
+        )
+        return await database.fetch_all(query)
+
 
 class TimeTrackingEntryRepo(RepoBase[int, TimeTrackingEntry]):
     crud: TimeTrackingEntryCrud
@@ -31,6 +47,10 @@ class TimeTrackingEntryRepo(RepoBase[int, TimeTrackingEntry]):
 
     async def get_total_minutes_by_task_and_employee(self, task_id: int, employee_id: int) -> int:
         return await self.crud.get_total_minutes_by_task_and_employee(task_id, employee_id)
+
+    async def get_all_entries_for_company(self, company_id: int) -> list[TimeTrackingEntry]:
+        dtos = await self.crud.get_all_entries_for_company(company_id)
+        return list(self.serializer.flat.deserialize(dtos))
 
 
 time_tracking_entry_repo = TimeTrackingEntryRepo(TimeTrackingEntryCrud(), DataclassSerializer(TimeTrackingEntry))

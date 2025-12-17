@@ -324,7 +324,6 @@ async def handle_task_id_shortcut(message: Message):
     text = message.text.strip()
     user_tg_id = message.from_user.id
 
-    # Parse the task ID format: COMP-PROJ-123
     import re
     pattern = r'^([A-Za-z]{3})-([A-Za-z]{3})-(\d+)$'
     match = re.match(pattern, text)

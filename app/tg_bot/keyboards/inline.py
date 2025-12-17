@@ -57,6 +57,18 @@ def build_company_details_keyboard(company_id: int, is_owner: bool) -> InlineKey
     buttons = []
 
     if is_owner:
+        export_project_callback = CompanyCallback(action="export_project_stats", company_id=company_id)
+        buttons.append([InlineKeyboardButton(
+            text="📊 Export Project Stats",
+            callback_data=export_project_callback.pack()
+        )])
+
+        export_employee_callback = CompanyCallback(action="export_employee_stats", company_id=company_id)
+        buttons.append([InlineKeyboardButton(
+            text="📊 Export Employee Stats",
+            callback_data=export_employee_callback.pack()
+        )])
+
         delete_callback = CompanyCallback(action="delete", company_id=company_id)
         buttons.append([InlineKeyboardButton(
             text="🗑 Delete Company",
