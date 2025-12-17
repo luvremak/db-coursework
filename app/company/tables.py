@@ -7,4 +7,6 @@ company_table = Table(
     metadata,
     Column('id', Integer, primary_key=True),
     Column('name', String, nullable=False),
+    Column('code', String(3), unique=True, nullable=False),
+    Column('owner_tg_id', Integer, nullable=False),
 )
