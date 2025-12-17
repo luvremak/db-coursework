@@ -242,8 +242,15 @@ async def callback_export_employee_stats(callback: CallbackQuery, callback_data:
 
         output = io.StringIO()
         fieldnames = [
-            "company_code", "project_code", "task_code", "task_name",
-            "employee_display_name", "created_at", "duration_minutes", "salary"
+            "company_code",
+            "project_code",
+            "task_code",
+            "task_name",
+            "employee_display_name",
+            "created_at",
+            "duration_minutes",
+            "salary",
+            "employee_total_minutes",
         ]
         writer = csv.DictWriter(output, fieldnames=fieldnames)
         writer.writeheader()
