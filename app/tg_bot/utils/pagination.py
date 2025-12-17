@@ -6,7 +6,7 @@ def get_pagination_params(page: int, page_size: int = 5) -> PaginationParameters
         page=page,
         page_size=page_size,
         order_by="id",
-        ascending=True
+        ascending=False
     )
 
 
