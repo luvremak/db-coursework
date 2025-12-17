@@ -1,8 +1,10 @@
+from copy import deepcopy
 from typing import ClassVar, Optional, Sequence
 
-from sqlalchemy import Table, func
+from sqlalchemy import Table, and_, asc, desc, func, select
 
 from app.core.database import database
+from app.core.types import PageData, PaginationParameters
 
 
 class CrudBase[ID, DTO]:
@@ -68,3 +70,60 @@ class CrudBase[ID, DTO]:
     async def get_all(self) -> Sequence[DTO]:
         query = self.table.select()
         return await database.fetch_all(query)
+
+    def _get_column_by_name(self, column_name: str):
+        return self.table.c.get(column_name)
+
+    def apply_filters(self, query, filters: dict | None = None):
+        if not filters:
+            return query
+
+        sqla_filters = []
+
+        for column_name, value in filters.items():
+            column = self._get_column_by_name(column_name)
+            if column is None:
+                continue
+            sqla_filters.append(column == value)
+
+        if sqla_filters:
+            query = query.where(and_(*sqla_filters))
+
+        return query
+
+    def apply_pagination(self, query, pagination: PaginationParameters | None = None):
+        if pagination is None:
+            return query
+
+        if pagination.page_size > 0 and pagination.page > 0:
+            limit = pagination.page_size
+            offset = (pagination.page - 1) * pagination.page_size
+            query = query.limit(limit).offset(offset)
+
+        order_column = self._get_column_by_name(pagination.order_by)
+        order = asc if pagination.ascending else desc
+        if order_column is not None:
+            query = query.order_by(order(order_column))
+
+        return query
+
+    async def count_filtered(self, filters: dict | None = None) -> int:
+        query = select(func.count()).select_from(self.table)
+        query = self.apply_filters(query, filters)
+        return await database.fetch_val(query)
+
+    async def list(
+        self, filters: dict | None = None, pagination: PaginationParameters | None = None
+    ) -> Sequence[DTO]:
+        query = select(self.table)
+        query = self.apply_filters(query, filters)
+        query = self.apply_pagination(query, pagination)
+        return await database.fetch_all(query)
+
+    async def get_page(
+        self, filters: dict | None = None, pagination: PaginationParameters | None = None
+    ) -> PageData[DTO]:
+        return PageData(
+            data=list(await self.list(deepcopy(filters), pagination=pagination)),
+            total=await self.count_filtered(deepcopy(filters)),
+        )

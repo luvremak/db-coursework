@@ -6,7 +6,7 @@ from app.core.crud_base import CrudBase
 from app.core.exceptions import UniqueViolationError
 from app.core.models import Entity
 from app.core.serializer import Serializer
-from app.core.types import DTO
+from app.core.types import DTO, PageData, PaginationParameters
 
 
 class RepoBase[ID, E: Entity]:
@@ -92,3 +92,21 @@ class RepoBase[ID, E: Entity]:
     async def get_all(self) -> Sequence[E]:
         dto = await self.crud.get_all()
         return self.serializer.flat.deserialize(dto)
+
+    async def count_filtered(self, filters: dict | None = None) -> int:
+        return await self.crud.count_filtered(filters)
+
+    async def list(
+        self, filters: dict | None = None, pagination: PaginationParameters | None = None
+    ) -> Sequence[E]:
+        dtos = await self.crud.list(filters, pagination)
+        return self.serializer.flat.deserialize(dtos)
+
+    async def get_page(
+        self, filters: dict | None = None, pagination: PaginationParameters | None = None
+    ) -> PageData[E]:
+        page_data = await self.crud.get_page(filters, pagination)
+        return PageData(
+            data=list(self.serializer.flat.deserialize(page_data.data)),
+            total=page_data.total,
+        )
