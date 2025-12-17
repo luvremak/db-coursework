@@ -23,6 +23,12 @@ class TaskCrud(CrudBase[int, DTO]):
         query = select(self.table).where(self.table.c.code == code)
         return await database.fetch_one(query)
 
+    async def get_by_code_and_project_id(self, code: int, project_id: int) -> DTO | None:
+        query = select(self.table).where(
+            and_(self.table.c.code == code, self.table.c.project_id == project_id)
+        )
+        return await database.fetch_one(query)
+
     async def get_by_assignee_user_id(
         self, assignee_user_id: int, pagination: PaginationParameters | None = None
     ) -> PageData[DTO]:
@@ -105,6 +111,12 @@ class TaskRepo(RepoBase[int, Task]):
 
     async def get_by_code(self, code: int) -> Task | None:
         dto = await self.crud.get_by_code(code)
+        if dto is None:
+            return None
+        return self.serializer.deserialize(dto)
+
+    async def get_by_code_and_project_id(self, code: int, project_id: int) -> Task | None:
+        dto = await self.crud.get_by_code_and_project_id(code, project_id)
         if dto is None:
             return None
         return self.serializer.deserialize(dto)

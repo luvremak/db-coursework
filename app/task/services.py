@@ -4,9 +4,11 @@ from app.task.dal import TaskCrud, TaskRepo
 from app.task.models import Task
 from app.task.exceptions import (
     TaskAccessDeniedError,
+    TaskNotFoundError,
 )
 from app.project.services import project_service
 from app.employee.services import employee_service
+from app.company.services import company_service
 from app.core.serializer import DataclassSerializer
 from app.core.types import PageData, PaginationParameters
 
@@ -117,6 +119,24 @@ class TaskService:
 
     async def get_soon_deadlines(self, days: int = 7) -> list[Task]:
         return await self.task_repo.get_soon_deadlines(days)
+
+    async def get_task_by_full_code(self, company_code: str, project_code: str, task_code: int) -> Task:
+        company = await company_service.company_repo.get_by_code(company_code.upper())
+        if not company:
+            raise TaskNotFoundError(f"Company with code '{company_code}' not found")
+
+        project = await project_service.project_repo.get_by_code(project_code.upper())
+        if not project:
+            raise TaskNotFoundError(f"Project with code '{project_code}' not found")
+
+        if project.company_id != company.id:
+            raise TaskNotFoundError(f"Project '{project_code}' does not belong to company '{company_code}'")
+
+        task = await self.task_repo.get_by_code_and_project_id(task_code, project.id)
+        if not task:
+            raise TaskNotFoundError(f"Task with code '{task_code}' not found in project '{project_code}'")
+
+        return task
 
 
 task_service = TaskService(TaskRepo(TaskCrud(), DataclassSerializer(Task)))

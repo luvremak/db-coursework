@@ -320,6 +320,39 @@ async def cmd_tasks(message: Message):
     await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
 
 
+async def handle_task_id_shortcut(message: Message):
+    text = message.text.strip()
+    user_tg_id = message.from_user.id
+
+    # Parse the task ID format: COMP-PROJ-123
+    import re
+    pattern = r'^([A-Za-z]{3})-([A-Za-z]{3})-(\d+)$'
+    match = re.match(pattern, text)
+
+    if not match:
+        return
+
+    company_code, project_code, task_code_str = match.groups()
+    task_code = int(task_code_str)
+
+    try:
+        task = await task_service.get_task_by_full_code(company_code, project_code, task_code)
+        project = await project_service.get_project_details(task.project_id)
+
+        is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
+        is_assignee = task.assignee_user_id == user_tg_id
+
+        tracked_minutes = await get_tracked_minutes_for_user(task.id, project.company_id, user_tg_id)
+
+        text = format_task_details(task, tracked_minutes)
+        keyboard = build_task_details_keyboard(task.id, task.project_id, is_admin, is_assignee)
+
+        await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+
+    except ApplicationError as e:
+        await handle_service_error(e, message)
+
+
 async def callback_view_tasks(callback: CallbackQuery, callback_data: CompanyCallback):
     company_id = callback_data.company_id
     page = 1
@@ -861,3 +894,5 @@ def register_task_handlers(router: Router):
         callback_task_back_to_list,
         TaskCallback.filter(F.action == "back_to_list")
     )
+
+    router.message.register(handle_task_id_shortcut, F.text)
