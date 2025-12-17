@@ -1,4 +1,6 @@
-from app.time_tracking.dal import TimeTrackingEntryRepo, time_tracking_entry_repo
+from app.time_tracking.dal import TimeTrackingEntryCrud, TimeTrackingEntryRepo
+from app.time_tracking.models import TimeTrackingEntry
+from app.core.serializer import DataclassSerializer
 
 
 class TimeTrackingEntryService:
@@ -6,4 +8,6 @@ class TimeTrackingEntryService:
         self.time_tracking_entry_repo = time_tracking_entry_repo
 
 
-time_tracking_entry_service = TimeTrackingEntryService(time_tracking_entry_repo)
+time_tracking_entry_service = TimeTrackingEntryService(
+    TimeTrackingEntryRepo(TimeTrackingEntryCrud(), DataclassSerializer(TimeTrackingEntry))
+)

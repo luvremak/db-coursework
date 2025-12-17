@@ -1,4 +1,6 @@
-from app.project.dal import ProjectRepo, project_repo
+from app.project.dal import ProjectCrud, ProjectRepo
+from app.project.models import Project
+from app.core.serializer import DataclassSerializer
 
 
 class ProjectService:
@@ -6,4 +8,4 @@ class ProjectService:
         self.project_repo = project_repo
 
 
-project_service = ProjectService(project_repo)
+project_service = ProjectService(ProjectRepo(ProjectCrud(), DataclassSerializer(Project)))

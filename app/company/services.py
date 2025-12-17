@@ -1,4 +1,6 @@
-from app.company.dal import CompanyRepo, company_repo
+from app.company.dal import CompanyCrud, CompanyRepo
+from app.company.models import Company
+from app.core.serializer import DataclassSerializer
 
 
 class CompanyService:
@@ -6,4 +8,4 @@ class CompanyService:
         self.company_repo = company_repo
 
 
-company_service = CompanyService(company_repo)
+company_service = CompanyService(CompanyRepo(CompanyCrud(), DataclassSerializer(Company)))

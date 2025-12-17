@@ -1,4 +1,6 @@
-from app.task.dal import TaskRepo, task_repo
+from app.task.dal import TaskCrud, TaskRepo
+from app.task.models import Task
+from app.core.serializer import DataclassSerializer
 
 
 class TaskService:
@@ -6,4 +8,4 @@ class TaskService:
         self.task_repo = task_repo
 
 
-task_service = TaskService(task_repo)
+task_service = TaskService(TaskRepo(TaskCrud(), DataclassSerializer(Task)))

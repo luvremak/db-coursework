@@ -1,4 +1,6 @@
-from app.employee.dal import EmployeeRepo, employee_repo
+from app.employee.dal import EmployeeCrud, EmployeeRepo
+from app.employee.models import Employee
+from app.core.serializer import DataclassSerializer
 
 
 class EmployeeService:
@@ -6,4 +8,4 @@ class EmployeeService:
         self.employee_repo = employee_repo
 
 
-employee_service = EmployeeService(employee_repo)
+employee_service = EmployeeService(EmployeeRepo(EmployeeCrud(), DataclassSerializer(Employee)))
