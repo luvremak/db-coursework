@@ -23,6 +23,13 @@ class TimeTrackingEntryService:
         )
         return await self.time_tracking_entry_repo.create(entry)
 
+    async def get_total_minutes_by_task_and_employee(
+        self,
+        task_id: int,
+        employee_id: int,
+    ) -> int:
+        return await self.time_tracking_entry_repo.get_total_minutes_by_task_and_employee(task_id, employee_id)
+
 
 time_tracking_entry_service = TimeTrackingEntryService(
     TimeTrackingEntryRepo(TimeTrackingEntryCrud(), DataclassSerializer(TimeTrackingEntry))

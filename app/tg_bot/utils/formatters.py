@@ -59,7 +59,19 @@ def format_task_status(status: str) -> str:
     return f"{emoji} {label}"
 
 
-def format_task_details(task: Task) -> str:
+def format_tracked_time(minutes: int) -> str:
+    if minutes < 60:
+        return f"{minutes} min"
+    else:
+        hours = minutes / 60
+        return f"{hours:.1f} hours"
+
+
+def format_task_details(task: Task, tracked_minutes: int = 0) -> str:
+    tracked_time_line = ""
+    if tracked_minutes > 0:
+        tracked_time_line = f"<b>Time tracked:</b> {format_tracked_time(tracked_minutes)}\n"
+
     return (
         f"<b>Task #{task.code}</b>\n\n"
         f"<b>Name:</b> {task.name}\n"
@@ -67,6 +79,7 @@ def format_task_details(task: Task) -> str:
         f"<b>Status:</b> {format_task_status(task.status)}\n"
         f"<b>Deadline:</b> {task.deadline.strftime('%Y-%m-%d %H:%M')}\n"
         f"<b>Assignee ID:</b> {task.assignee_user_id}\n"
+        f"{tracked_time_line}"
         f"<b>Created:</b> {task.created_at.strftime('%Y-%m-%d %H:%M')}\n"
         f"<b>ID:</b> {task.id}"
     )

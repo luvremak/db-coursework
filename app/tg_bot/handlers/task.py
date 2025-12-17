@@ -43,6 +43,13 @@ def parse_flexible_deadline(date_string: str) -> datetime:
     raise ValueError("Invalid date format")
 
 
+async def get_tracked_minutes_for_user(task_id: int, company_id: int, user_tg_id: int) -> int:
+    employee = await employee_service.get_employee_by_telegram_id_and_company_id(user_tg_id, company_id)
+    if not employee:
+        return 0
+    return await time_tracking_entry_service.get_total_minutes_by_task_and_employee(task_id, employee.id)
+
+
 async def cmd_new_task(message: Message, state: FSMContext):
     user_tg_id = message.from_user.id
     page = 1
@@ -216,7 +223,8 @@ async def callback_select_employee_for_task_assignee(callback: CallbackQuery, ca
             is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
             is_assignee = task.assignee_user_id == user_tg_id
 
-            text = f"✅ Task assigned successfully!\n\n{format_task_details(task)}"
+            tracked_minutes = await get_tracked_minutes_for_user(task_id, project.company_id, user_tg_id)
+            text = f"✅ Task assigned successfully!\n\n{format_task_details(task, tracked_minutes)}"
             keyboard = build_task_details_keyboard(task_id, project_id, is_admin, is_assignee)
 
             await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
@@ -431,7 +439,8 @@ async def callback_task_details(callback: CallbackQuery, callback_data: TaskCall
         is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
         is_assignee = task.assignee_user_id == user_tg_id
 
-        text = format_task_details(task)
+        tracked_minutes = await get_tracked_minutes_for_user(task_id, project.company_id, user_tg_id)
+        text = format_task_details(task, tracked_minutes)
         keyboard = build_task_details_keyboard(task_id, task.project_id, is_admin, is_assignee)
 
         await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
@@ -483,7 +492,8 @@ async def process_time_duration(message: Message, state: FSMContext):
         is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
         is_assignee = task.assignee_user_id == user_tg_id
 
-        text = f"✅ Tracked {duration_minutes} minutes for this task!\n\n{format_task_details(task)}"
+        tracked_minutes = await get_tracked_minutes_for_user(task_id, project.company_id, user_tg_id)
+        text = f"✅ Tracked {duration_minutes} minutes for this task!\n\n{format_task_details(task, tracked_minutes)}"
         keyboard = build_task_details_keyboard(task_id, project_id, is_admin, is_assignee)
 
         await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
@@ -518,7 +528,8 @@ async def process_new_task_name(message: Message, state: FSMContext):
         is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
         is_assignee = task.assignee_user_id == user_tg_id
 
-        text = f"✅ Task name updated!\n\n{format_task_details(task)}"
+        tracked_minutes = await get_tracked_minutes_for_user(task_id, project.company_id, user_tg_id)
+        text = f"✅ Task name updated!\n\n{format_task_details(task, tracked_minutes)}"
         keyboard = build_task_details_keyboard(task_id, project_id, is_admin, is_assignee)
 
         await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
@@ -551,7 +562,8 @@ async def process_new_task_description(message: Message, state: FSMContext):
         is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
         is_assignee = task.assignee_user_id == user_tg_id
 
-        text = f"✅ Task description updated!\n\n{format_task_details(task)}"
+        tracked_minutes = await get_tracked_minutes_for_user(task_id, project.company_id, user_tg_id)
+        text = f"✅ Task description updated!\n\n{format_task_details(task, tracked_minutes)}"
         keyboard = build_task_details_keyboard(task_id, project_id, is_admin, is_assignee)
 
         await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
@@ -591,7 +603,8 @@ async def process_new_task_deadline(message: Message, state: FSMContext):
         is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
         is_assignee = task.assignee_user_id == user_tg_id
 
-        text = f"✅ Task deadline updated!\n\n{format_task_details(task)}"
+        tracked_minutes = await get_tracked_minutes_for_user(task_id, project.company_id, user_tg_id)
+        text = f"✅ Task deadline updated!\n\n{format_task_details(task, tracked_minutes)}"
         keyboard = build_task_details_keyboard(task_id, project_id, is_admin, is_assignee)
 
         await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
@@ -671,7 +684,8 @@ async def callback_set_status(callback: CallbackQuery, callback_data: TaskCallba
         is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
         is_assignee = task.assignee_user_id == user_tg_id
 
-        text = f"✅ Status updated!\n\n{format_task_details(task)}"
+        tracked_minutes = await get_tracked_minutes_for_user(task_id, project.company_id, user_tg_id)
+        text = f"✅ Status updated!\n\n{format_task_details(task, tracked_minutes)}"
         keyboard = build_task_details_keyboard(task_id, project_id, is_admin, is_assignee)
 
         await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
