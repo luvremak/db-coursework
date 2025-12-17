@@ -1,9 +1,8 @@
 from datetime import datetime
-from collections import defaultdict
 
+from app.core.serializer import DataclassSerializer
 from app.time_tracking.dal import TimeTrackingEntryCrud, TimeTrackingEntryRepo
 from app.time_tracking.models import TimeTrackingEntry
-from app.core.serializer import DataclassSerializer
 
 
 class TimeTrackingEntryService:
@@ -22,7 +21,7 @@ class TimeTrackingEntryService:
             duration_minutes=duration_minutes,
             created_at=datetime.now(),
         )
-        return await self.time_tracking_entry_repo.create(entry)
+        return await self.time_tracking_entry_repo.create_and_get(entry)
 
     async def get_total_minutes_by_task_and_employee(
         self,

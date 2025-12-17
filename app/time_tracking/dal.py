@@ -65,6 +65,40 @@ class TimeTrackingEntryCrud(CrudBase[int, DTO]):
         self.log_query(query)
         return await database.fetch_all(query)
 
+    async def get_employee_stats_for_company(self, company_id: int) -> list[dict]:
+        window_func = func.row_number().over(
+            order_by=self.table.c.created_at.desc(),
+            partition_by=employee_table.c.telegram_id
+        ).label("entry_rank")
+
+        total_employee_time = func.sum(self.table.c.duration_minutes).over(
+            partition_by=employee_table.c.id
+        ).label("employee_total_minutes")
+
+        query = (
+            select(
+                project_table.c.code.label("project_code"),
+                task_table.c.code.label("task_code"),
+                task_table.c.name.label("task_name"),
+                employee_table.c.display_name.label("employee_display_name"),
+                self.table.c.created_at,
+                self.table.c.duration_minutes,
+                total_employee_time,
+                (self.table.c.duration_minutes / 60.0 * employee_table.c.salary_per_hour).label("salary_cost"),
+                window_func
+            )
+            .select_from(
+                self.table
+                .join(employee_table, self.table.c.employee_id == employee_table.c.id)
+                .join(task_table, self.table.c.task_id == task_table.c.id)
+                .join(project_table, task_table.c.project_id == project_table.c.id)
+            )
+            .where(project_table.c.company_id == company_id)
+            .order_by(employee_table.c.display_name, self.table.c.created_at.desc())
+        )
+        self.log_query(query)
+        return await database.fetch_all(query)
+
 class TimeTrackingEntryRepo(RepoBase[int, TimeTrackingEntry]):
     crud: TimeTrackingEntryCrud
 
@@ -80,5 +114,9 @@ class TimeTrackingEntryRepo(RepoBase[int, TimeTrackingEntry]):
 
     async def get_project_stats_for_company(self, company_id: int) -> list[dict]:
         return await self.crud.get_project_stats_for_company(company_id)
+
+    async def get_employee_stats_for_company(self, company_id: int) -> list[dict]:
+        return await self.crud.get_employee_stats_for_company(company_id)
+
 
 time_tracking_entry_repo = TimeTrackingEntryRepo(TimeTrackingEntryCrud(), DataclassSerializer(TimeTrackingEntry))
