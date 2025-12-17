@@ -12,6 +12,9 @@ async def cmd_start(message: Message):
         "<b>Project Commands:</b>\n"
         "/new_project - Create a new project\n"
         "/projects - View projects\n\n"
+        "<b>Employee Commands:</b>\n"
+        "/new_employee - Add a new employee\n"
+        "/employees - View employees\n\n"
         "/help - Show this help message",
         parse_mode="HTML"
     )
@@ -26,6 +29,9 @@ async def cmd_help(message: Message):
         "<b>Project Management:</b>\n"
         "/new_project - Create a new project\n"
         "/projects - View projects\n\n"
+        "<b>Employee Management:</b>\n"
+        "/new_employee - Add a new employee\n"
+        "/employees - View employees\n\n"
         "/start - Show welcome message",
         parse_mode="HTML"
     )

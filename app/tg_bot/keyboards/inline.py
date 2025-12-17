@@ -93,6 +93,42 @@ def build_project_details_keyboard(project_id: int, company_id: int, is_owner_or
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def build_employee_details_keyboard(
+    employee_id: int,
+    company_id: int,
+    is_admin: bool,
+    is_active: bool
+) -> InlineKeyboardMarkup:
+    from app.tg_bot.utils.callback_data import EmployeeCallback
+
+    buttons = []
+
+    if is_admin:
+        buttons.append([InlineKeyboardButton(
+            text="✏️ Set Display Name",
+            callback_data=EmployeeCallback(action="set_display_name", employee_id=employee_id, company_id=company_id).pack()
+        )])
+
+        buttons.append([InlineKeyboardButton(
+            text="💰 Set Salary/Hour",
+            callback_data=EmployeeCallback(action="set_salary", employee_id=employee_id, company_id=company_id).pack()
+        )])
+
+        status_text = "🔴 Deactivate" if is_active else "🟢 Activate"
+        buttons.append([InlineKeyboardButton(
+            text=status_text,
+            callback_data=EmployeeCallback(action="toggle_active", employee_id=employee_id, company_id=company_id).pack()
+        )])
+
+    back_callback = EmployeeCallback(action="back_to_list", company_id=company_id)
+    buttons.append([InlineKeyboardButton(
+        text="◀️ Back to List",
+        callback_data=back_callback.pack()
+    )])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def build_confirm_keyboard(
     confirm_callback: CallbackData,
     cancel_callback: CallbackData

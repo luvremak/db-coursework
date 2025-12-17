@@ -12,6 +12,11 @@ from app.project.exceptions import (
     InvalidProjectCodeError,
     ProjectAlreadyExistsError,
 )
+from app.employee.exceptions import (
+    EmployeeNotFoundError,
+    EmployeeAccessDeniedError,
+    EmployeeAlreadyExistsError,
+)
 
 
 ERROR_MESSAGES = {
@@ -23,6 +28,9 @@ ERROR_MESSAGES = {
     ProjectAccessDeniedError: "You don't have permission to perform this action",
     InvalidProjectCodeError: "Invalid project code. Must be exactly 3 letters",
     ProjectAlreadyExistsError: "A project with this code already exists",
+    EmployeeNotFoundError: "Employee not found",
+    EmployeeAccessDeniedError: "You don't have permission to perform this action",
+    EmployeeAlreadyExistsError: "Employee already exists in this company",
 }
 
 

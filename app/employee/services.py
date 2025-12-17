@@ -91,5 +91,16 @@ class EmployeeService:
 
         return await self.employee_repo.update_salary_per_hour(employee_id, salary_per_hour)
 
+    async def set_is_active(
+        self, employee_id: int, is_active: bool, user_tg_id: int
+    ) -> Employee:
+        employee = await self.employee_repo.get_by_id(employee_id)
+
+        is_authorized = await self.verify_user_is_owner_or_admin(employee.company_id, user_tg_id)
+        if not is_authorized:
+            raise EmployeeAccessDeniedError("Only company owner or admin can change employee status")
+
+        return await self.employee_repo.update_is_active(employee_id, is_active)
+
 
 employee_service = EmployeeService(EmployeeRepo(EmployeeCrud(), DataclassSerializer(Employee)))

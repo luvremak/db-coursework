@@ -46,6 +46,15 @@ class EmployeeCrud(CrudBase[int, DTO]):
         )
         return await database.fetch_one(query)
 
+    async def update_is_active(self, employee_id: int, is_active: bool) -> DTO:
+        query = (
+            self.table.update()
+            .where(self.table.c.id == employee_id)
+            .values(is_active=is_active)
+            .returning(self.table)
+        )
+        return await database.fetch_one(query)
+
 
 class EmployeeRepo(RepoBase[int, Employee]):
     crud: EmployeeCrud
@@ -78,6 +87,10 @@ class EmployeeRepo(RepoBase[int, Employee]):
 
     async def update_salary_per_hour(self, employee_id: int, salary_per_hour: float) -> Employee:
         dto = await self.crud.update_salary_per_hour(employee_id, salary_per_hour)
+        return self.serializer.deserialize(dto)
+
+    async def update_is_active(self, employee_id: int, is_active: bool) -> Employee:
+        dto = await self.crud.update_is_active(employee_id, is_active)
         return self.serializer.deserialize(dto)
 
 
