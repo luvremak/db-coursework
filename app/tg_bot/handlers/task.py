@@ -10,6 +10,7 @@ from app.project.services import project_service
 from app.task.services import task_service
 from app.time_tracking.services import time_tracking_entry_service
 from app.core.exceptions import ApplicationError
+from app.core.database import database
 from app.tg_bot.states.task import TaskCreation, TaskModification, TimeTracking
 from app.tg_bot.utils.callback_data import CompanyCallback, ProjectCallback, TaskCallback, EmployeeCallback
 from app.tg_bot.utils.formatters import format_task_details
@@ -142,6 +143,29 @@ async def process_task_description(message: Message, state: FSMContext):
 async def process_task_deadline(message: Message, state: FSMContext):
     try:
         deadline = parse_flexible_deadline(message.text)
+        await state.update_data(deadline=deadline)
+        await state.set_state(TaskCreation.waiting_for_time_spent)
+        await message.answer("Enter initial time spent in minutes (e.g., 30, 60, 120):")
+    except ValueError:
+        await message.answer(
+            "❌ Invalid date format. Examples:\n"
+            "• 2025-12-31 23:59\n"
+            "• 12-31 23:59\n"
+            "• 2025-12-31\n"
+            "• 12-31"
+        )
+    except ApplicationError as e:
+        await handle_service_error(e, message)
+        await state.clear()
+
+
+async def process_task_time_spent(message: Message, state: FSMContext):
+    try:
+        duration_minutes = int(message.text.strip())
+        if duration_minutes <= 0:
+            await message.answer("❌ Duration must be a positive number. Please try again:")
+            return
+
         data = await state.get_data()
         project_id = data['project_id']
 
@@ -157,7 +181,7 @@ async def process_task_deadline(message: Message, state: FSMContext):
             await state.clear()
             return
 
-        await state.update_data(deadline=deadline)
+        await state.update_data(time_spent=duration_minutes)
         await state.set_state(TaskCreation.waiting_for_assignee)
 
         total_pages = calculate_total_pages(page_data.total, page_size=5)
@@ -177,13 +201,7 @@ async def process_task_deadline(message: Message, state: FSMContext):
 
         await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
     except ValueError:
-        await message.answer(
-            "❌ Invalid date format. Examples:\n"
-            "• 2025-12-31 23:59\n"
-            "• 12-31 23:59\n"
-            "• 2025-12-31\n"
-            "• 12-31"
-        )
+        await message.answer("❌ Invalid duration. Please enter a valid number of minutes:")
     except ApplicationError as e:
         await handle_service_error(e, message)
         await state.clear()
@@ -200,18 +218,31 @@ async def callback_select_employee_for_task_assignee(callback: CallbackQuery, ca
         assignee_user_id = employee.telegram_id
 
         if current_state == TaskCreation.waiting_for_assignee:
-            task = await task_service.create_task(
-                project_id=data['project_id'],
-                name=data['name'],
-                description=data['description'],
-                deadline=data['deadline'],
-                assignee_user_id=assignee_user_id,
-                user_tg_id=user_tg_id
-            )
-            await callback.message.edit_text(
-                f"✅ Task created successfully!\n\n{format_task_details(task)}",
-                parse_mode="HTML"
-            )
+            time_spent = data.get('time_spent')
+
+            async with database.transaction():
+                task = await task_service.create_task(
+                    project_id=data['project_id'],
+                    name=data['name'],
+                    description=data['description'],
+                    deadline=data['deadline'],
+                    assignee_user_id=assignee_user_id,
+                    user_tg_id=user_tg_id
+                )
+
+                if time_spent:
+                    await time_tracking_entry_service.create_time_entry(
+                        task_id=task.id,
+                        employee_id=employee_id,
+                        duration_minutes=time_spent,
+                    )
+
+            tracked_minutes = time_spent if time_spent else 0
+            confirmation_text = f"✅ Task created successfully!\n\n{format_task_details(task, tracked_minutes)}"
+            if time_spent:
+                confirmation_text += f"\n\n⏱ Initial time tracked: {time_spent} minutes"
+
+            await callback.message.edit_text(confirmation_text, parse_mode="HTML")
             await state.clear()
         elif current_state == TaskModification.waiting_for_assignee:
             task_id = data['task_id']
@@ -829,6 +860,7 @@ def register_task_handlers(router: Router):
     router.message.register(process_task_name, TaskCreation.waiting_for_name)
     router.message.register(process_task_description, TaskCreation.waiting_for_description)
     router.message.register(process_task_deadline, TaskCreation.waiting_for_deadline)
+    router.message.register(process_task_time_spent, TaskCreation.waiting_for_time_spent)
 
     router.message.register(process_new_task_name, TaskModification.waiting_for_name)
     router.message.register(process_new_task_description, TaskModification.waiting_for_description)

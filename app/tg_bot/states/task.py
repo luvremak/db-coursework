@@ -6,6 +6,7 @@ class TaskCreation(StatesGroup):
     waiting_for_name = State()
     waiting_for_description = State()
     waiting_for_deadline = State()
+    waiting_for_time_spent = State()
     waiting_for_assignee = State()
 
 
