@@ -6,7 +6,7 @@ task_table = Table(
     'task',
     metadata,
     Column('id', Integer, primary_key=True),
-    Column('project_id', Integer, ForeignKey('project.id'), nullable=False),
+    Column('project_id', Integer, ForeignKey('project.id', ondelete='CASCADE'), nullable=False),
     Column('name', String, nullable=False),
     Column('code', String, unique=True, nullable=False),
     Column('description', String, nullable=False),
