@@ -22,6 +22,10 @@ from app.task.exceptions import (
     TaskAccessDeniedError,
     TaskAlreadyExistsError,
 )
+from app.time_tracking.exceptions import (
+    TimeTrackingEntryNotFoundError,
+    TimeTrackingEntryAlreadyExistsError,
+)
 
 
 ERROR_MESSAGES = {
@@ -39,6 +43,8 @@ ERROR_MESSAGES = {
     TaskNotFoundError: "Task not found",
     TaskAccessDeniedError: "You don't have permission to perform this action",
     TaskAlreadyExistsError: "Task already exists",
+    TimeTrackingEntryNotFoundError: "Time tracking entry not found",
+    TimeTrackingEntryAlreadyExistsError: "Time tracking entry already exists",
 }
 
 

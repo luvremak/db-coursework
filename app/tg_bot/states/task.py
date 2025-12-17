@@ -14,3 +14,7 @@ class TaskModification(StatesGroup):
     waiting_for_description = State()
     waiting_for_deadline = State()
     waiting_for_assignee = State()
+
+
+class TimeTracking(StatesGroup):
+    waiting_for_duration = State()

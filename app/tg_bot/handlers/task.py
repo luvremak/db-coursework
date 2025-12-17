@@ -8,8 +8,9 @@ from app.company.services import company_service
 from app.employee.services import employee_service
 from app.project.services import project_service
 from app.task.services import task_service
+from app.time_tracking.services import time_tracking_entry_service
 from app.core.exceptions import ApplicationError
-from app.tg_bot.states.task import TaskCreation, TaskModification
+from app.tg_bot.states.task import TaskCreation, TaskModification, TimeTracking
 from app.tg_bot.utils.callback_data import CompanyCallback, ProjectCallback, TaskCallback, EmployeeCallback
 from app.tg_bot.utils.formatters import format_task_details
 from app.tg_bot.utils.pagination import get_pagination_params, calculate_total_pages
@@ -438,8 +439,59 @@ async def callback_task_details(callback: CallbackQuery, callback_data: TaskCall
         await handle_service_error(e, callback)
 
 
-async def callback_track_time(callback: CallbackQuery, callback_data: TaskCallback):
-    await callback.answer("⏱ Time tracking feature coming soon!", show_alert=True)
+async def callback_track_time(callback: CallbackQuery, callback_data: TaskCallback, state: FSMContext):
+    task_id = callback_data.task_id
+    project_id = callback_data.project_id
+
+    await state.update_data(task_id=task_id, project_id=project_id)
+    await state.set_state(TimeTracking.waiting_for_duration)
+    await callback.message.edit_text("Enter time duration in minutes (e.g., 30, 60, 120):")
+    await callback.answer()
+
+
+async def process_time_duration(message: Message, state: FSMContext):
+    data = await state.get_data()
+    task_id = data['task_id']
+    project_id = data['project_id']
+    user_tg_id = message.from_user.id
+
+    try:
+        duration_minutes = int(message.text.strip())
+        if duration_minutes <= 0:
+            await message.answer("❌ Duration must be a positive number. Please try again:")
+            return
+
+        task = await task_service.get_task_details(task_id)
+        project = await project_service.get_project_details(project_id)
+
+        employee = await employee_service.get_employee_by_telegram_id_and_company_id(
+            user_tg_id, project.company_id
+        )
+
+        if not employee:
+            await message.answer("❌ You are not an employee of this company.")
+            await state.clear()
+            return
+
+        await time_tracking_entry_service.create_time_entry(
+            task_id=task_id,
+            employee_id=employee.id,
+            duration_minutes=duration_minutes,
+        )
+
+        is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
+        is_assignee = task.assignee_user_id == user_tg_id
+
+        text = f"✅ Tracked {duration_minutes} minutes for this task!\n\n{format_task_details(task)}"
+        keyboard = build_task_details_keyboard(task_id, project_id, is_admin, is_assignee)
+
+        await message.answer(text, reply_markup=keyboard, parse_mode="HTML")
+        await state.clear()
+    except ValueError:
+        await message.answer("❌ Invalid duration. Please enter a valid number of minutes:")
+    except ApplicationError as e:
+        await handle_service_error(e, message)
+        await state.clear()
 
 
 async def callback_edit_name(callback: CallbackQuery, callback_data: TaskCallback, state: FSMContext):
@@ -703,6 +755,8 @@ def register_task_handlers(router: Router):
     router.message.register(process_new_task_name, TaskModification.waiting_for_name)
     router.message.register(process_new_task_description, TaskModification.waiting_for_description)
     router.message.register(process_new_task_deadline, TaskModification.waiting_for_deadline)
+
+    router.message.register(process_time_duration, TimeTracking.waiting_for_duration)
 
     router.callback_query.register(
         callback_select_employee_for_task_assignee,

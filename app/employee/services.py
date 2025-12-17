@@ -69,6 +69,11 @@ class EmployeeService:
     async def get_employee_details(self, employee_id: int) -> Employee:
         return await self.employee_repo.get_by_id(employee_id)
 
+    async def get_employee_by_telegram_id_and_company_id(
+        self, telegram_id: int, company_id: int
+    ) -> Employee | None:
+        return await self.employee_repo.get_by_telegram_id_and_company_id(telegram_id, company_id)
+
     async def set_display_name(
         self, employee_id: int, display_name: str, user_tg_id: int
     ) -> Employee:
