@@ -16,17 +16,20 @@ class TaskCrud(CrudBase[int, DTO]):
 
     async def get_next_code_for_project(self, project_id: int) -> int:
         query = select(func.max(self.table.c.code)).where(self.table.c.project_id == project_id)
+        self.log_query(query)
         max_code = await database.fetch_val(query)
         return (max_code or 0) + 1
 
     async def get_by_code(self, code: int) -> DTO | None:
         query = select(self.table).where(self.table.c.code == code)
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def get_by_code_and_project_id(self, code: int, project_id: int) -> DTO | None:
         query = select(self.table).where(
             and_(self.table.c.code == code, self.table.c.project_id == project_id)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def get_by_assignee_user_id(
@@ -50,6 +53,7 @@ class TaskCrud(CrudBase[int, DTO]):
                 self.table.c.deadline <= deadline_limit
             )
         ).order_by(self.table.c.deadline.asc())
+        self.log_query(query)
         return await database.fetch_all(query)
 
     async def update_name(self, task_id: int, name: str) -> DTO:
@@ -59,6 +63,7 @@ class TaskCrud(CrudBase[int, DTO]):
             .values(name=name)
             .returning(self.table)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def update_description(self, task_id: int, description: str) -> DTO:
@@ -68,6 +73,7 @@ class TaskCrud(CrudBase[int, DTO]):
             .values(description=description)
             .returning(self.table)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def update_deadline(self, task_id: int, deadline: datetime) -> DTO:
@@ -77,6 +83,7 @@ class TaskCrud(CrudBase[int, DTO]):
             .values(deadline=deadline)
             .returning(self.table)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def update_assignee(self, task_id: int, assignee_user_id: int) -> DTO:
@@ -86,6 +93,7 @@ class TaskCrud(CrudBase[int, DTO]):
             .values(assignee_user_id=assignee_user_id)
             .returning(self.table)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def update_status(self, task_id: int, status: str) -> DTO:
@@ -95,6 +103,7 @@ class TaskCrud(CrudBase[int, DTO]):
             .values(status=status)
             .returning(self.table)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
 

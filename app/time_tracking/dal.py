@@ -19,6 +19,7 @@ class TimeTrackingEntryCrud(CrudBase[int, DTO]):
                 self.table.c.employee_id == employee_id
             )
         )
+        self.log_query(query)
         result = await database.fetch_val(query)
         return result or 0
 
@@ -36,6 +37,7 @@ class TimeTrackingEntryCrud(CrudBase[int, DTO]):
             .where(project_table.c.company_id == company_id)
             .order_by(self.table.c.created_at.desc())
         )
+        self.log_query(query)
         return await database.fetch_all(query)
 
 

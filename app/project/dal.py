@@ -15,6 +15,7 @@ class ProjectCrud(CrudBase[int, DTO]):
 
     async def get_by_code(self, code: str) -> DTO | None:
         query = select(self.table).where(self.table.c.code == code)
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def get_by_company_id(

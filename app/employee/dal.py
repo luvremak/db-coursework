@@ -20,6 +20,7 @@ class EmployeeCrud(CrudBase[int, DTO]):
                 self.table.c.company_id == company_id
             )
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def get_by_company_id(
@@ -35,6 +36,7 @@ class EmployeeCrud(CrudBase[int, DTO]):
             .values(display_name=display_name)
             .returning(self.table)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def update_salary_per_hour(self, employee_id: int, salary_per_hour: float) -> DTO:
@@ -44,6 +46,7 @@ class EmployeeCrud(CrudBase[int, DTO]):
             .values(salary_per_hour=salary_per_hour)
             .returning(self.table)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
     async def update_is_active(self, employee_id: int, is_active: bool) -> DTO:
@@ -53,6 +56,7 @@ class EmployeeCrud(CrudBase[int, DTO]):
             .values(is_active=is_active)
             .returning(self.table)
         )
+        self.log_query(query)
         return await database.fetch_one(query)
 
 
