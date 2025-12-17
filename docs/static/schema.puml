@@ -1,0 +1,62 @@
+@startuml
+hide circle
+skinparam linetype ortho
+
+entity Company {
+  +id : Integer <<PK>>
+  --
+  name : String
+  code : String(3) <<UNIQUE>>
+  owner_tg_id : BigInteger
+}
+
+entity Project {
+  +id : Integer <<PK>>
+  --
+  name : String
+  code : String(3) <<UNIQUE>>
+  created_at : DateTime
+  company_id : Integer <<FK>>
+}
+
+entity Task {
+  +id : Integer <<PK>>
+  --
+  name : String
+  code : Integer
+  description : String
+  deadline : DateTime
+  created_at : DateTime
+  assignee_user_id : BigInteger
+  status : String
+  project_id : Integer <<FK>>
+}
+
+entity Employee {
+  +id : Integer <<PK>>
+  --
+  telegram_id : BigInteger
+  is_active : Boolean
+  is_admin : Boolean
+  created_at : DateTime
+  salary_per_hour : Float
+  display_name : String
+  company_id : Integer <<FK>>
+}
+
+entity TimeTrackingEntry {
+  +id : Integer <<PK>>
+  --
+  duration_minutes : Integer
+  created_at : DateTime
+  task_id : Integer <<FK>>
+  employee_id : Integer <<FK>>
+}
+
+Company ||--o{ Project
+Company ||--o{ Employee
+Project ||--o{ Task
+Task ||--o{ TimeTrackingEntry
+Employee ||--o{ TimeTrackingEntry
+
+@enduml
