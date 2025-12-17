@@ -1,5 +1,6 @@
-from unittest.mock import patch
+import os
 import uuid
+from unittest.mock import patch
 
 import pytest_asyncio
 from databases import Database
@@ -10,13 +11,15 @@ from app.core.database import metadata
 
 @pytest_asyncio.fixture(autouse=True)
 async def db():
-    db_name = f"test_{uuid.uuid4().hex}"
-    test_database = Database(f'sqlite+aiosqlite:///file:{db_name}?mode=memory&cache=shared&uri=true')
+    db_file = f"test_{uuid.uuid4().hex}.db"
+    db_url = f"sqlite+aiosqlite:///{db_file}"
+    sync_url = f"sqlite:///{db_file}"
 
-    engine = create_engine(f'sqlite:///file:{db_name}?mode=memory&cache=shared&uri=true')
+    engine = create_engine(sync_url)
     metadata.create_all(engine)
     engine.dispose()
 
+    test_database = Database(db_url)
     await test_database.connect()
 
     with (
@@ -31,3 +34,5 @@ async def db():
         yield test_database
 
     await test_database.disconnect()
+    if os.path.exists(db_file):
+        os.remove(db_file)
