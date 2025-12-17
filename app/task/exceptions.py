@@ -15,7 +15,3 @@ class TaskAlreadyExistsError(UniqueViolationError, TaskException):
 
 class TaskAccessDeniedError(TaskException):
     pass
-
-
-class InvalidTaskCodeError(TaskException):
-    pass

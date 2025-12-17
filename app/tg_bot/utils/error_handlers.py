@@ -17,6 +17,11 @@ from app.employee.exceptions import (
     EmployeeAccessDeniedError,
     EmployeeAlreadyExistsError,
 )
+from app.task.exceptions import (
+    TaskNotFoundError,
+    TaskAccessDeniedError,
+    TaskAlreadyExistsError,
+)
 
 
 ERROR_MESSAGES = {
@@ -31,6 +36,9 @@ ERROR_MESSAGES = {
     EmployeeNotFoundError: "Employee not found",
     EmployeeAccessDeniedError: "You don't have permission to perform this action",
     EmployeeAlreadyExistsError: "Employee already exists in this company",
+    TaskNotFoundError: "Task not found",
+    TaskAccessDeniedError: "You don't have permission to perform this action",
+    TaskAlreadyExistsError: "Task already exists",
 }
 
 

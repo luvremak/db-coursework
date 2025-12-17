@@ -15,6 +15,10 @@ async def cmd_start(message: Message):
         "<b>Employee Commands:</b>\n"
         "/new_employee - Add a new employee\n"
         "/employees - View employees\n\n"
+        "<b>Task Commands:</b>\n"
+        "/new_task - Create a new task\n"
+        "/my_tasks - View tasks assigned to you\n"
+        "/tasks - View all tasks\n\n"
         "/help - Show this help message",
         parse_mode="HTML"
     )
@@ -32,6 +36,10 @@ async def cmd_help(message: Message):
         "<b>Employee Management:</b>\n"
         "/new_employee - Add a new employee\n"
         "/employees - View employees\n\n"
+        "<b>Task Management:</b>\n"
+        "/new_task - Create a new task\n"
+        "/my_tasks - View tasks assigned to you\n"
+        "/tasks - View all tasks\n\n"
         "/start - Show welcome message",
         parse_mode="HTML"
     )

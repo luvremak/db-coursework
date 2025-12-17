@@ -3,9 +3,7 @@ from datetime import datetime
 from app.task.dal import TaskCrud, TaskRepo
 from app.task.models import Task
 from app.task.exceptions import (
-    InvalidTaskCodeError,
     TaskAccessDeniedError,
-    TaskAlreadyExistsError,
 )
 from app.project.services import project_service
 from app.employee.services import employee_service
@@ -26,7 +24,6 @@ class TaskService:
         self,
         project_id: int,
         name: str,
-        code: str,
         description: str,
         deadline: datetime,
         assignee_user_id: int,
@@ -36,13 +33,7 @@ class TaskService:
         if not has_access:
             raise TaskAccessDeniedError("Only company owner or admin can create tasks")
 
-        code = code.upper()
-        if not code:
-            raise InvalidTaskCodeError("Task code cannot be empty")
-
-        existing = await self.task_repo.get_by_code(code)
-        if existing is not None:
-            raise TaskAlreadyExistsError(f"Task with code '{code}' already exists")
+        code = await self.task_repo.get_next_code_for_project(project_id)
 
         task = Task(
             project_id=project_id,

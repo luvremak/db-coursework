@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, func
 
 from app.core.crud_base import CrudBase
 from app.core.repo_base import RepoBase
@@ -14,7 +14,12 @@ from app.core.database import database
 class TaskCrud(CrudBase[int, DTO]):
     table = task_table
 
-    async def get_by_code(self, code: str) -> DTO | None:
+    async def get_next_code_for_project(self, project_id: int) -> int:
+        query = select(func.max(self.table.c.code)).where(self.table.c.project_id == project_id)
+        max_code = await database.fetch_val(query)
+        return (max_code or 0) + 1
+
+    async def get_by_code(self, code: int) -> DTO | None:
         query = select(self.table).where(self.table.c.code == code)
         return await database.fetch_one(query)
 
@@ -86,7 +91,10 @@ class TaskRepo(RepoBase[int, Task]):
         self.not_found_exception_cls = TaskNotFoundError
         self.unique_violation_exception_cls = TaskAlreadyExistsError
 
-    async def get_by_code(self, code: str) -> Task | None:
+    async def get_next_code_for_project(self, project_id: int) -> int:
+        return await self.crud.get_next_code_for_project(project_id)
+
+    async def get_by_code(self, code: int) -> Task | None:
         dto = await self.crud.get_by_code(code)
         if dto is None:
             return None

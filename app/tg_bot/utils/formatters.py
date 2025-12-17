@@ -1,6 +1,7 @@
 from app.company.models import Company
 from app.project.models import Project
 from app.employee.models import Employee
+from app.task.models import Task
 
 
 def format_company_details(company: Company) -> str:
@@ -35,4 +36,16 @@ def format_employee_details(employee: Employee) -> str:
         f"<b>Status:</b> {status}\n"
         f"<b>Created:</b> {employee.created_at.strftime('%Y-%m-%d %H:%M')}\n"
         f"<b>ID:</b> {employee.id}"
+    )
+
+
+def format_task_details(task: Task) -> str:
+    return (
+        f"<b>Task #{task.code}</b>\n\n"
+        f"<b>Name:</b> {task.name}\n"
+        f"<b>Description:</b> {task.description}\n"
+        f"<b>Deadline:</b> {task.deadline.strftime('%Y-%m-%d %H:%M')}\n"
+        f"<b>Assignee ID:</b> {task.assignee_user_id}\n"
+        f"<b>Created:</b> {task.created_at.strftime('%Y-%m-%d %H:%M')}\n"
+        f"<b>ID:</b> {task.id}"
     )

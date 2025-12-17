@@ -142,6 +142,57 @@ def build_confirm_keyboard(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def build_task_details_keyboard(
+    task_id: int,
+    project_id: int,
+    is_admin: bool,
+    is_assignee: bool
+) -> InlineKeyboardMarkup:
+    from app.tg_bot.utils.callback_data import TaskCallback
+
+    buttons = []
+
+    if is_assignee:
+        buttons.append([InlineKeyboardButton(
+            text="⏱ Track Time",
+            callback_data=TaskCallback(action="track_time", task_id=task_id, project_id=project_id).pack()
+        )])
+
+    if is_admin:
+        buttons.append([InlineKeyboardButton(
+            text="✏️ Edit Name",
+            callback_data=TaskCallback(action="edit_name", task_id=task_id, project_id=project_id).pack()
+        )])
+
+        buttons.append([InlineKeyboardButton(
+            text="📝 Edit Description",
+            callback_data=TaskCallback(action="edit_description", task_id=task_id, project_id=project_id).pack()
+        )])
+
+        buttons.append([InlineKeyboardButton(
+            text="📅 Set Deadline",
+            callback_data=TaskCallback(action="set_deadline", task_id=task_id, project_id=project_id).pack()
+        )])
+
+        buttons.append([InlineKeyboardButton(
+            text="👤 Assign",
+            callback_data=TaskCallback(action="assign", task_id=task_id, project_id=project_id).pack()
+        )])
+
+        buttons.append([InlineKeyboardButton(
+            text="🗑 Delete Task",
+            callback_data=TaskCallback(action="delete", task_id=task_id, project_id=project_id).pack()
+        )])
+
+    back_callback = TaskCallback(action="back_to_list", project_id=project_id)
+    buttons.append([InlineKeyboardButton(
+        text="◀️ Back to List",
+        callback_data=back_callback.pack()
+    )])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def build_back_button(callback_data: CallbackData) -> InlineKeyboardMarkup:
     buttons = [[InlineKeyboardButton(
         text="◀️ Back",
