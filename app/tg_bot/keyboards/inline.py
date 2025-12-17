@@ -72,6 +72,27 @@ def build_company_details_keyboard(company_id: int, is_owner: bool) -> InlineKey
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def build_project_details_keyboard(project_id: int, company_id: int, is_owner_or_admin: bool) -> InlineKeyboardMarkup:
+    from app.tg_bot.utils.callback_data import ProjectCallback
+
+    buttons = []
+
+    if is_owner_or_admin:
+        delete_callback = ProjectCallback(action="delete", project_id=project_id, company_id=company_id)
+        buttons.append([InlineKeyboardButton(
+            text="🗑 Delete Project",
+            callback_data=delete_callback.pack()
+        )])
+
+    back_callback = ProjectCallback(action="back_to_list", company_id=company_id)
+    buttons.append([InlineKeyboardButton(
+        text="◀️ Back to List",
+        callback_data=back_callback.pack()
+    )])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def build_confirm_keyboard(
     confirm_callback: CallbackData,
     cancel_callback: CallbackData

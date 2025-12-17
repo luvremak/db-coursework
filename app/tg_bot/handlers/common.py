@@ -8,7 +8,10 @@ async def cmd_start(message: Message):
         "👋 <b>Welcome to AnyaDB Bot!</b>\n\n"
         "<b>Company Commands:</b>\n"
         "/new_company - Create a new company\n"
-        "/my_companies - View your companies\n"
+        "/my_companies - View your companies\n\n"
+        "<b>Project Commands:</b>\n"
+        "/new_project - Create a new project\n"
+        "/projects - View projects\n\n"
         "/help - Show this help message",
         parse_mode="HTML"
     )
@@ -19,7 +22,10 @@ async def cmd_help(message: Message):
         "<b>Available Commands:</b>\n\n"
         "<b>Company Management:</b>\n"
         "/new_company - Create a new company\n"
-        "/my_companies - View your companies\n"
+        "/my_companies - View your companies\n\n"
+        "<b>Project Management:</b>\n"
+        "/new_project - Create a new project\n"
+        "/projects - View projects\n\n"
         "/start - Show welcome message",
         parse_mode="HTML"
     )

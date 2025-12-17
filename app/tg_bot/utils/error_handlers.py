@@ -6,6 +6,12 @@ from app.company.exceptions import (
     InvalidCompanyCodeError,
     CompanyAlreadyExistsError,
 )
+from app.project.exceptions import (
+    ProjectNotFoundError,
+    ProjectAccessDeniedError,
+    InvalidProjectCodeError,
+    ProjectAlreadyExistsError,
+)
 
 
 ERROR_MESSAGES = {
@@ -13,6 +19,10 @@ ERROR_MESSAGES = {
     CompanyAccessDeniedError: "You don't have permission to perform this action",
     InvalidCompanyCodeError: "Invalid company code. Must be exactly 3 letters",
     CompanyAlreadyExistsError: "A company with this code already exists",
+    ProjectNotFoundError: "Project not found",
+    ProjectAccessDeniedError: "You don't have permission to perform this action",
+    InvalidProjectCodeError: "Invalid project code. Must be exactly 3 letters",
+    ProjectAlreadyExistsError: "A project with this code already exists",
 }
 
 
