@@ -8,4 +8,5 @@ from app.core.models import Entity
 class Project(Entity):
     company_id: int
     name: str
+    code: str
     created_at: datetime
