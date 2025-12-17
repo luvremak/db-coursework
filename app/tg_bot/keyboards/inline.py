@@ -180,6 +180,11 @@ def build_task_details_keyboard(
         )])
 
         buttons.append([InlineKeyboardButton(
+            text="🔄 Change Status",
+            callback_data=TaskCallback(action="change_status", task_id=task_id, project_id=project_id).pack()
+        )])
+
+        buttons.append([InlineKeyboardButton(
             text="🗑 Delete Task",
             callback_data=TaskCallback(action="delete", task_id=task_id, project_id=project_id).pack()
         )])
@@ -187,6 +192,33 @@ def build_task_details_keyboard(
     back_callback = TaskCallback(action="back_to_list", project_id=project_id)
     buttons.append([InlineKeyboardButton(
         text="◀️ Back to List",
+        callback_data=back_callback.pack()
+    )])
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def build_status_selection_keyboard(task_id: int, project_id: int) -> InlineKeyboardMarkup:
+    from app.tg_bot.utils.callback_data import TaskCallback
+
+    statuses = [
+        ("🆕 New", "new"),
+        ("⚙️ In Progress", "in_progress"),
+        ("👀 Review", "review"),
+        ("✅ Done", "done"),
+        ("❌ Canceled", "canceled"),
+    ]
+
+    buttons = []
+    for label, status_value in statuses:
+        buttons.append([InlineKeyboardButton(
+            text=label,
+            callback_data=TaskCallback(action="set_status", task_id=task_id, project_id=project_id, status=status_value).pack()
+        )])
+
+    back_callback = TaskCallback(action="details", task_id=task_id, project_id=project_id)
+    buttons.append([InlineKeyboardButton(
+        text="◀️ Back",
         callback_data=back_callback.pack()
     )])
 

@@ -26,3 +26,4 @@ class TaskCallback(CallbackData, prefix="task"):
     task_id: int = 0
     project_id: int = 0
     page: int = 1
+    status: str = ""

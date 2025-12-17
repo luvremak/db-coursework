@@ -39,11 +39,32 @@ def format_employee_details(employee: Employee) -> str:
     )
 
 
+def format_task_status(status: str) -> str:
+    status_emoji = {
+        "new": "🆕",
+        "in_progress": "⚙️",
+        "review": "👀",
+        "done": "✅",
+        "canceled": "❌"
+    }
+    status_labels = {
+        "new": "New",
+        "in_progress": "In Progress",
+        "review": "Review",
+        "done": "Done",
+        "canceled": "Canceled"
+    }
+    emoji = status_emoji.get(status, "")
+    label = status_labels.get(status, status)
+    return f"{emoji} {label}"
+
+
 def format_task_details(task: Task) -> str:
     return (
         f"<b>Task #{task.code}</b>\n\n"
         f"<b>Name:</b> {task.name}\n"
         f"<b>Description:</b> {task.description}\n"
+        f"<b>Status:</b> {format_task_status(task.status)}\n"
         f"<b>Deadline:</b> {task.deadline.strftime('%Y-%m-%d %H:%M')}\n"
         f"<b>Assignee ID:</b> {task.assignee_user_id}\n"
         f"<b>Created:</b> {task.created_at.strftime('%Y-%m-%d %H:%M')}\n"

@@ -82,6 +82,15 @@ class TaskCrud(CrudBase[int, DTO]):
         )
         return await database.fetch_one(query)
 
+    async def update_status(self, task_id: int, status: str) -> DTO:
+        query = (
+            self.table.update()
+            .where(self.table.c.id == task_id)
+            .values(status=status)
+            .returning(self.table)
+        )
+        return await database.fetch_one(query)
+
 
 class TaskRepo(RepoBase[int, Task]):
     crud: TaskCrud
@@ -136,6 +145,10 @@ class TaskRepo(RepoBase[int, Task]):
 
     async def update_assignee(self, task_id: int, assignee_user_id: int) -> Task:
         dto = await self.crud.update_assignee(task_id, assignee_user_id)
+        return self.serializer.deserialize(dto)
+
+    async def update_status(self, task_id: int, status: str) -> Task:
+        dto = await self.crud.update_status(task_id, status)
         return self.serializer.deserialize(dto)
 
 

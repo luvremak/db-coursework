@@ -107,6 +107,14 @@ class TaskService:
 
         return await self.task_repo.update_assignee(task_id, assignee_user_id)
 
+    async def update_status(self, task_id: int, status: str, user_tg_id: int) -> Task:
+        task = await self.task_repo.get_by_id(task_id)
+        has_access = await self.verify_user_has_access_to_project(task.project_id, user_tg_id)
+        if not has_access:
+            raise TaskAccessDeniedError("Only company owner or admin can change task status")
+
+        return await self.task_repo.update_status(task_id, status)
+
     async def get_soon_deadlines(self, days: int = 7) -> list[Task]:
         return await self.task_repo.get_soon_deadlines(days)
 

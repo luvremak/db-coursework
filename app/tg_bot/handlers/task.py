@@ -19,6 +19,7 @@ from app.tg_bot.keyboards.inline import (
     build_list_keyboard,
     build_task_details_keyboard,
     build_confirm_keyboard,
+    build_status_selection_keyboard,
 )
 
 
@@ -648,6 +649,37 @@ async def callback_assign(callback: CallbackQuery, callback_data: TaskCallback, 
         await handle_service_error(e, callback)
 
 
+async def callback_change_status(callback: CallbackQuery, callback_data: TaskCallback):
+    task_id = callback_data.task_id
+    project_id = callback_data.project_id
+
+    keyboard = build_status_selection_keyboard(task_id, project_id)
+    await callback.message.edit_text("Select new status:", reply_markup=keyboard)
+    await callback.answer()
+
+
+async def callback_set_status(callback: CallbackQuery, callback_data: TaskCallback):
+    task_id = callback_data.task_id
+    project_id = callback_data.project_id
+    status = callback_data.status
+    user_tg_id = callback.from_user.id
+
+    try:
+        task = await task_service.update_status(task_id, status, user_tg_id)
+        project = await project_service.get_project_details(project_id)
+
+        is_admin = await employee_service.verify_user_is_owner_or_admin(project.company_id, user_tg_id)
+        is_assignee = task.assignee_user_id == user_tg_id
+
+        text = f"✅ Status updated!\n\n{format_task_details(task)}"
+        keyboard = build_task_details_keyboard(task_id, project_id, is_admin, is_assignee)
+
+        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+        await callback.answer()
+    except ApplicationError as e:
+        await handle_service_error(e, callback)
+
+
 async def callback_delete_task(callback: CallbackQuery, callback_data: TaskCallback):
     task_id = callback_data.task_id
     project_id = callback_data.project_id
@@ -794,6 +826,14 @@ def register_task_handlers(router: Router):
     router.callback_query.register(
         callback_assign,
         TaskCallback.filter(F.action == "assign")
+    )
+    router.callback_query.register(
+        callback_change_status,
+        TaskCallback.filter(F.action == "change_status")
+    )
+    router.callback_query.register(
+        callback_set_status,
+        TaskCallback.filter(F.action == "set_status")
     )
     router.callback_query.register(
         callback_delete_task,

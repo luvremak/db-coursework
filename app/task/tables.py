@@ -1,6 +1,7 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, BigInteger
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Table, BigInteger, CheckConstraint
 
 from app.core.database import metadata
+from app.task.models import TaskStatus
 
 task_table = Table(
     'task',
@@ -13,4 +14,9 @@ task_table = Table(
     Column('deadline', DateTime, nullable=False),
     Column('created_at', DateTime, nullable=False),
     Column('assignee_user_id', BigInteger, nullable=False),
+    Column('status', String, nullable=False, server_default=TaskStatus.NEW.value),
+    CheckConstraint(
+        f"status IN ('{TaskStatus.NEW.value}', '{TaskStatus.IN_PROGRESS.value}', '{TaskStatus.REVIEW.value}', '{TaskStatus.DONE.value}', '{TaskStatus.CANCELED.value}')",
+        name='task_status_check'
+    ),
 )
